@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/pfa.dart';
 import '../models/transaction.dart';
 import '../services/storage_service.dart';
 import '../utils/tax_calculator.dart';
+import '../utils/safe_formatters.dart';
+import '../utils/error_handler.dart';
 import 'transactions_screen.dart';
 import 'reports_screen.dart';
 
@@ -26,10 +27,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _loadData() {
-    setState(() {
-      _pfa = StorageService.getCurrentPFA();
-      _transactions = StorageService.getTransactionsByYear(_selectedYear);
-    });
+    try {
+      setState(() {
+        _pfa = StorageService.getCurrentPFA();
+        _transactions = StorageService.getTransactionsByYear(_selectedYear);
+      });
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('_loadData', e, stackTrace);
+      if (mounted) {
+        ErrorHandler.showErrorSnackBar(
+          context,
+          'Eroare la încărcarea datelor. Vă rugăm să reporniți aplicația.',
+        );
+      }
+    }
   }
 
   @override
@@ -144,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Current Month Summary
             Text(
-              'Luna curentă (${DateFormat('MMMM yyyy').format(DateTime.now())})',
+              'Luna curentă (${SafeFormatters.formatDateWithMonth(DateTime.now())})',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

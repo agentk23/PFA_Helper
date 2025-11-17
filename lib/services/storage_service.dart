@@ -3,8 +3,10 @@ import '../models/pfa.dart';
 import '../models/transaction.dart';
 import '../models/transaction_category.dart';
 import '../models/caen_code.dart';
+import '../utils/error_handler.dart';
 
 /// Service for managing local storage with Hive
+/// All methods include error handling to prevent app crashes
 class StorageService {
   static const String pfaBoxName = 'pfa_box';
   static const String transactionsBoxName = 'transactions_box';
@@ -42,13 +44,23 @@ class StorageService {
 
   /// Get current PFA
   static PFA? getCurrentPFA() {
-    final box = getPFABox();
-    return box.get('current_pfa');
+    try {
+      final box = getPFABox();
+      return box.get('current_pfa');
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('getCurrentPFA', e, stackTrace);
+      return null;
+    }
   }
 
   /// Check if PFA is registered
   static bool isPFARegistered() {
-    return getCurrentPFA() != null;
+    try {
+      return getCurrentPFA() != null;
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('isPFARegistered', e, stackTrace);
+      return false;
+    }
   }
 
   /// Add transaction
@@ -71,29 +83,49 @@ class StorageService {
 
   /// Get all transactions
   static List<Transaction> getAllTransactions() {
-    final box = getTransactionsBox();
-    return box.values.toList();
+    try {
+      final box = getTransactionsBox();
+      return box.values.toList();
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('getAllTransactions', e, stackTrace);
+      return [];
+    }
   }
 
   /// Get transactions for a specific year
   static List<Transaction> getTransactionsByYear(int year) {
-    final allTransactions = getAllTransactions();
-    return allTransactions.where((t) => t.date.year == year).toList();
+    try {
+      final allTransactions = getAllTransactions();
+      return allTransactions.where((t) => t.date.year == year).toList();
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('getTransactionsByYear', e, stackTrace);
+      return [];
+    }
   }
 
   /// Get transactions for a specific month
   static List<Transaction> getTransactionsByMonth(int year, int month) {
-    final allTransactions = getAllTransactions();
-    return allTransactions
-        .where((t) => t.date.year == year && t.date.month == month)
-        .toList();
+    try {
+      final allTransactions = getAllTransactions();
+      return allTransactions
+          .where((t) => t.date.year == year && t.date.month == month)
+          .toList();
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('getTransactionsByMonth', e, stackTrace);
+      return [];
+    }
   }
 
   /// Get transactions for a specific category
   static List<Transaction> getTransactionsByCategory(
       TransactionCategory category) {
-    final allTransactions = getAllTransactions();
-    return allTransactions.where((t) => t.category == category).toList();
+    try {
+      final allTransactions = getAllTransactions();
+      return allTransactions.where((t) => t.category == category).toList();
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('getTransactionsByCategory', e, stackTrace);
+      return [];
+    }
   }
 
   /// Clear all data

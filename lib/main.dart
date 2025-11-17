@@ -1,15 +1,39 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'services/storage_service.dart';
 import 'screens/pfa_registration_screen.dart';
 import 'screens/home_screen.dart';
+import 'utils/error_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive storage
-  await StorageService.initialize();
+  // Set up global error handling
+  FlutterError.onError = (FlutterErrorDetails details) {
+    ErrorHandler.logError(
+      'Flutter Error',
+      details.exception,
+      details.stack,
+    );
+  };
 
-  runApp(const PFAHelperApp());
+  // Handle errors in async operations
+  runZonedGuarded(
+    () async {
+      // Initialize Hive storage
+      try {
+        await StorageService.initialize();
+      } catch (e, stackTrace) {
+        ErrorHandler.logError('Storage Initialization', e, stackTrace);
+        // Continue anyway - app can still function without data
+      }
+
+      runApp(const PFAHelperApp());
+    },
+    (error, stackTrace) {
+      ErrorHandler.logError('Uncaught Error', error, stackTrace);
+    },
+  );
 }
 
 class PFAHelperApp extends StatelessWidget {

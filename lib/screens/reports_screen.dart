@@ -5,6 +5,7 @@ import '../models/pfa.dart';
 import '../services/storage_service.dart';
 import '../services/pdf_service.dart';
 import '../utils/tax_calculator.dart';
+import '../utils/error_handler.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -246,14 +247,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (mounted) {
         _showShareDialog(file, 'Raport Fiscal $_selectedYear');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('generateAnnualTaxReport', e, stackTrace);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Eroare la generarea raportului: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ErrorHandler.handleError(context, 'generarea raportului fiscal', e, stackTrace);
       }
     } finally {
       setState(() {
@@ -291,14 +288,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (mounted) {
         _showShareDialog(file, 'Registru Tranzacții $_selectedYear');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('generateTransactionsList', e, stackTrace);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Eroare la generarea listei: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ErrorHandler.handleError(context, 'generarea listei de tranzacții', e, stackTrace);
       }
     } finally {
       setState(() {
