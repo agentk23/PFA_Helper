@@ -25,13 +25,14 @@ class PFAAdapter extends TypeAdapter<PFA> {
       registrationDate: fields[5] as DateTime,
       isRealSystem: fields[6] as bool,
       activityType: fields[7] as String,
+      caenCodes: (fields[8] as List?)?.cast<CAENCode>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, PFA obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.cui)
       ..writeByte(1)
@@ -47,7 +48,9 @@ class PFAAdapter extends TypeAdapter<PFA> {
       ..writeByte(6)
       ..write(obj.isRealSystem)
       ..writeByte(7)
-      ..write(obj.activityType);
+      ..write(obj.activityType)
+      ..writeByte(8)
+      ..write(obj.caenCodes);
   }
 
   @override

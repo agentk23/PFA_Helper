@@ -2,6 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/pfa.dart';
 import '../models/transaction.dart';
 import '../models/transaction_category.dart';
+import '../models/caen_code.dart';
 
 /// Service for managing local storage with Hive
 class StorageService {
@@ -16,6 +17,7 @@ class StorageService {
     Hive.registerAdapter(PFAAdapter());
     Hive.registerAdapter(TransactionAdapter());
     Hive.registerAdapter(TransactionCategoryAdapter());
+    Hive.registerAdapter(CAENCodeAdapter());
 
     // Open boxes
     await Hive.openBox<PFA>(pfaBoxName);

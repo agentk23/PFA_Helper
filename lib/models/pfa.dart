@@ -1,8 +1,10 @@
 import 'package:hive/hive.dart';
+import 'caen_code.dart';
 
 part 'pfa.g.dart';
 
 /// PFA (Persoană Fizică Autorizată) model
+/// According to Emergency Ordinance no. 44/2008, a PFA can have maximum 5 CAEN codes
 @HiveType(typeId: 1)
 class PFA extends HiveObject {
   @HiveField(0)
@@ -27,7 +29,13 @@ class PFA extends HiveObject {
   bool isRealSystem; // true = Sistem Real, false = Norme de venit
 
   @HiveField(7)
-  String activityType; // Type of activity/profession
+  String activityType; // Type of activity/profession (legacy field for backward compatibility)
+
+  @HiveField(8)
+  List<CAENCode>? caenCodes; // Maximum 5 CAEN codes as per legislation
+
+  /// Maximum number of CAEN codes allowed per PFA (Romanian legislation)
+  static const int maxCAENCodes = 5;
 
   PFA({
     required this.cui,
@@ -38,7 +46,39 @@ class PFA extends HiveObject {
     required this.registrationDate,
     required this.isRealSystem,
     required this.activityType,
-  });
+    this.caenCodes,
+  }) {
+    // Ensure we don't exceed the maximum number of CAEN codes
+    if (caenCodes != null && caenCodes!.length > maxCAENCodes) {
+      throw ArgumentError(
+        'A PFA can have maximum $maxCAENCodes CAEN codes (Emergency Ordinance no. 44/2008)',
+      );
+    }
+  }
+
+  /// Get primary CAEN code (the main business activity)
+  CAENCode? get primaryCAENCode {
+    if (caenCodes == null || caenCodes!.isEmpty) return null;
+    return caenCodes!.firstWhere(
+      (code) => code.isPrimary,
+      orElse: () => caenCodes!.first,
+    );
+  }
+
+  /// Check if PFA can add more CAEN codes
+  bool get canAddMoreCAENCodes {
+    return caenCodes == null || caenCodes!.length < maxCAENCodes;
+  }
+
+  /// Get number of registered CAEN codes
+  int get caenCodeCount {
+    return caenCodes?.length ?? 0;
+  }
+
+  /// Check if any CAEN code has special tax rate
+  bool get hasSpecialTaxRate {
+    return caenCodes?.any((code) => code.hasSpecialTaxRate) ?? false;
+  }
 
   PFA copyWith({
     String? cui,
@@ -49,6 +89,7 @@ class PFA extends HiveObject {
     DateTime? registrationDate,
     bool? isRealSystem,
     String? activityType,
+    List<CAENCode>? caenCodes,
   }) {
     return PFA(
       cui: cui ?? this.cui,
@@ -59,6 +100,7 @@ class PFA extends HiveObject {
       registrationDate: registrationDate ?? this.registrationDate,
       isRealSystem: isRealSystem ?? this.isRealSystem,
       activityType: activityType ?? this.activityType,
+      caenCodes: caenCodes ?? this.caenCodes,
     );
   }
 }

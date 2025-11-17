@@ -1,4 +1,5 @@
 /// Tax report model for calculating annual taxes
+/// Supports mixed tax rates based on CAEN codes (standard 10% + special 3% rate)
 class TaxReport {
   final double totalTaxableIncome;
   final double totalNonTaxableIncome;
@@ -6,12 +7,24 @@ class TaxReport {
   final double totalNonDeductibleExpenses;
   final int year;
 
+  // CAEN-specific income tracking
+  final double incomeAt3PercentRate; // Income from CAEN codes with 3% special rate
+  final double incomeAt10PercentRate; // Income from standard CAEN codes
+
+  // CAEN breakdown (code -> amount)
+  final Map<String, double>? incomeByCAEN;
+  final Map<String, double>? expensesByCAEN;
+
   TaxReport({
     required this.totalTaxableIncome,
     required this.totalNonTaxableIncome,
     required this.totalDeductibleExpenses,
     required this.totalNonDeductibleExpenses,
     required this.year,
+    this.incomeAt3PercentRate = 0.0,
+    this.incomeAt10PercentRate = 0.0,
+    this.incomeByCAEN,
+    this.expensesByCAEN,
   });
 
   /// Net taxable income (taxable income - deductible expenses)
@@ -29,9 +42,56 @@ class TaxReport {
     return totalDeductibleExpenses + totalNonDeductibleExpenses;
   }
 
-  /// Income tax (10% of net taxable income)
+  /// Income tax with support for mixed rates (3% for IT/software + 10% standard)
+  /// Calculates proportionally based on income from different CAEN categories
   double get incomeTax {
+    // If we have specific breakdown, calculate with mixed rates
+    if (incomeAt3PercentRate > 0 || incomeAt10PercentRate > 0) {
+      // Calculate net income proportionally
+      final totalIncome = incomeAt3PercentRate + incomeAt10PercentRate;
+      if (totalIncome <= 0) return 0;
+
+      // Proportion of expenses to each income type
+      final ratio3Percent = incomeAt3PercentRate / totalIncome;
+      final ratio10Percent = incomeAt10PercentRate / totalIncome;
+
+      final expenses3Percent = totalDeductibleExpenses * ratio3Percent;
+      final expenses10Percent = totalDeductibleExpenses * ratio10Percent;
+
+      final netIncome3Percent = (incomeAt3PercentRate - expenses3Percent).clamp(0.0, double.infinity);
+      final netIncome10Percent = (incomeAt10PercentRate - expenses10Percent).clamp(0.0, double.infinity);
+
+      return (netIncome3Percent * 0.03) + (netIncome10Percent * 0.10);
+    }
+
+    // Fallback: standard 10% rate
     return netTaxableIncome * 0.10;
+  }
+
+  /// Get breakdown of income tax by rate
+  Map<String, double> get incomeTaxBreakdown {
+    if (incomeAt3PercentRate > 0 || incomeAt10PercentRate > 0) {
+      final totalIncome = incomeAt3PercentRate + incomeAt10PercentRate;
+      if (totalIncome <= 0) {
+        return {'standard': 0.0, 'special': 0.0};
+      }
+
+      final ratio3Percent = incomeAt3PercentRate / totalIncome;
+      final ratio10Percent = incomeAt10PercentRate / totalIncome;
+
+      final expenses3Percent = totalDeductibleExpenses * ratio3Percent;
+      final expenses10Percent = totalDeductibleExpenses * ratio10Percent;
+
+      final netIncome3Percent = (incomeAt3PercentRate - expenses3Percent).clamp(0.0, double.infinity);
+      final netIncome10Percent = (incomeAt10PercentRate - expenses10Percent).clamp(0.0, double.infinity);
+
+      return {
+        'special': netIncome3Percent * 0.03,
+        'standard': netIncome10Percent * 0.10,
+      };
+    }
+
+    return {'standard': netTaxableIncome * 0.10, 'special': 0.0};
   }
 
   /// Minimum gross salary for 2025

@@ -4,6 +4,7 @@ import 'transaction_category.dart';
 part 'transaction.g.dart';
 
 /// Transaction model for PFA accounting
+/// Each transaction can be associated with a specific CAEN code (economic activity)
 @HiveType(typeId: 2)
 class Transaction extends HiveObject {
   @HiveField(0)
@@ -30,6 +31,12 @@ class Transaction extends HiveObject {
   @HiveField(7)
   DateTime createdAt; // When the transaction was recorded
 
+  @HiveField(8)
+  String? caenCode; // Associated CAEN code (stores the code string, e.g., "6201")
+
+  @HiveField(9)
+  double? customTaxRate; // Optional custom tax rate for this specific transaction (overrides CAEN default)
+
   Transaction({
     required this.id,
     required this.amount,
@@ -39,6 +46,8 @@ class Transaction extends HiveObject {
     this.invoiceNumber,
     this.notes,
     required this.createdAt,
+    this.caenCode,
+    this.customTaxRate,
   });
 
   Transaction copyWith({
@@ -50,6 +59,8 @@ class Transaction extends HiveObject {
     String? invoiceNumber,
     String? notes,
     DateTime? createdAt,
+    String? caenCode,
+    double? customTaxRate,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -60,9 +71,30 @@ class Transaction extends HiveObject {
       invoiceNumber: invoiceNumber ?? this.invoiceNumber,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
+      caenCode: caenCode ?? this.caenCode,
+      customTaxRate: customTaxRate ?? this.customTaxRate,
     );
   }
 
   bool get isIncome => category.isIncome;
   bool get isExpense => category.isExpense;
+
+  /// Get the effective tax rate for this transaction
+  /// Priority: custom rate > CAEN-specific rate > standard 10%
+  double getEffectiveTaxRate({List<String>? specialRateCodes}) {
+    // If custom rate is set, use it
+    if (customTaxRate != null) {
+      return customTaxRate!;
+    }
+
+    // If CAEN code has special rate (3% for IT/software)
+    if (caenCode != null && specialRateCodes != null) {
+      if (specialRateCodes.contains(caenCode)) {
+        return 0.03; // 3% special rate
+      }
+    }
+
+    // Standard rate
+    return 0.10; // 10% standard income tax
+  }
 }

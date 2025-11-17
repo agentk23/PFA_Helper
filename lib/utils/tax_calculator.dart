@@ -1,10 +1,15 @@
 import '../models/transaction.dart';
 import '../models/transaction_category.dart';
 import '../models/tax_report.dart';
+import '../models/caen_code.dart';
 
-/// Utility class for tax calculations
+/// Utility class for tax calculations with CAEN code support
 class TaxCalculator {
+  /// CAEN codes that qualify for 3% special tax rate (IT/Software development)
+  static final specialRateCodes = CAENCode.specialRateCodes;
+
   /// Calculate tax report for a given year from list of transactions
+  /// Supports mixed tax rates based on CAEN codes
   static TaxReport calculateAnnualReport(
     List<Transaction> transactions,
     int year,
@@ -19,17 +24,48 @@ class TaxCalculator {
     double totalDeductibleExpenses = 0.0;
     double totalNonDeductibleExpenses = 0.0;
 
+    // Track income by tax rate
+    double incomeAt3Percent = 0.0;
+    double incomeAt10Percent = 0.0;
+
+    // Track by CAEN code
+    Map<String, double> incomeByCAEN = {};
+    Map<String, double> expensesByCAEN = {};
+
     for (final transaction in yearTransactions) {
       switch (transaction.category) {
         case TransactionCategory.taxableIncome:
           totalTaxableIncome += transaction.amount;
+
+          // Categorize by tax rate based on CAEN code
+          if (transaction.caenCode != null &&
+              specialRateCodes.contains(transaction.caenCode)) {
+            incomeAt3Percent += transaction.amount;
+          } else {
+            incomeAt10Percent += transaction.amount;
+          }
+
+          // Track by CAEN code
+          if (transaction.caenCode != null) {
+            incomeByCAEN[transaction.caenCode!] =
+                (incomeByCAEN[transaction.caenCode!] ?? 0.0) + transaction.amount;
+          }
           break;
+
         case TransactionCategory.nonTaxableIncome:
           totalNonTaxableIncome += transaction.amount;
           break;
+
         case TransactionCategory.deductibleExpense:
           totalDeductibleExpenses += transaction.amount;
+
+          // Track expenses by CAEN code
+          if (transaction.caenCode != null) {
+            expensesByCAEN[transaction.caenCode!] =
+                (expensesByCAEN[transaction.caenCode!] ?? 0.0) + transaction.amount;
+          }
           break;
+
         case TransactionCategory.nonDeductibleExpense:
           totalNonDeductibleExpenses += transaction.amount;
           break;
@@ -42,6 +78,10 @@ class TaxCalculator {
       totalDeductibleExpenses: totalDeductibleExpenses,
       totalNonDeductibleExpenses: totalNonDeductibleExpenses,
       year: year,
+      incomeAt3PercentRate: incomeAt3Percent,
+      incomeAt10PercentRate: incomeAt10Percent,
+      incomeByCAEN: incomeByCAEN.isNotEmpty ? incomeByCAEN : null,
+      expensesByCAEN: expensesByCAEN.isNotEmpty ? expensesByCAEN : null,
     );
   }
 
