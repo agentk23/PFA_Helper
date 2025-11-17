@@ -144,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Current Month Summary
             Text(
-              'Luna curentă (${DateFormat('MMMM yyyy', 'ro').format(DateTime.now())})',
+              'Luna curentă (${DateFormat('MMMM yyyy').format(DateTime.now())})',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
