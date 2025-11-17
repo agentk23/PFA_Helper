@@ -26,24 +26,22 @@ class PFAHelperApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
-          backgroundColor: Colors.blue.shade800,
+          backgroundColor: Color(0xFF1565C0), // Colors.blue.shade800
           foregroundColor: Colors.white,
         ),
-        cardTheme: CardTheme(
+        cardTheme: const CardTheme(
           elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          margin: EdgeInsets.zero,
         ),
         inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
           ),
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: const Color(0xFFFAFAFA), // Colors.grey.shade50
         ),
       ),
       home: const SplashScreen(),
