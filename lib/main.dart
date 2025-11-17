@@ -56,10 +56,6 @@ class PFAHelperApp extends StatelessWidget {
           backgroundColor: Color(0xFF1565C0), // Colors.blue.shade800
           foregroundColor: Colors.white,
         ),
-        cardTheme: const CardTheme(
-          elevation: 2,
-          margin: EdgeInsets.zero,
-        ),
         inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
