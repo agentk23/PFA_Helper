@@ -7,6 +7,7 @@ import '../utils/tax_calculator.dart';
 import '../utils/safe_formatters.dart';
 import '../utils/error_handler.dart';
 
+/// Home screen displaying financial overview and quick actions
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,18 +26,18 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadData();
   }
 
-  void _loadData() {
+  Future<void> _loadData() async {
     try {
       setState(() {
         _pfa = StorageService.getCurrentPFA();
-        _transactions = StorageService.getTransactionsByYear(_selectedYear);
+        _transactions = StorageService.getAllTransactions();
       });
     } catch (e, stackTrace) {
-      ErrorHandler.logError('_loadData', e, stackTrace);
+      ErrorHandler.logError('loadData', e, stackTrace);
       if (mounted) {
         ErrorHandler.showErrorSnackBar(
           context,
-          'Eroare la încărcarea datelor. Vă rugăm să reporniți aplicația.',
+          'Eroare la încărcarea datelor.',
         );
       }
     }
@@ -46,385 +47,540 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     if (_pfa == null) {
       return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    final taxReport = TaxCalculator.calculateAnnualReport(_transactions, _selectedYear);
-    final currentMonthSummary = TaxCalculator.calculateMonthlySummary(
-      StorageService.getAllTransactions(),
-      DateTime.now().year,
-      DateTime.now().month,
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    final taxReport = TaxCalculator.calculateAnnualReport(
+      _transactions,
+      _selectedYear,
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('PFA Helper'),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'year') {
-                _showYearPicker();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'year',
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today),
-                    const SizedBox(width: 8),
-                    Text('An: $_selectedYear'),
-                  ],
+      backgroundColor: colorScheme.surfaceContainerLowest,
+      body: CustomScrollView(
+        slivers: [
+          // Modern App Bar
+          SliverAppBar.large(
+            expandedHeight: 140,
+            pinned: true,
+            backgroundColor: colorScheme.primary,
+            foregroundColor: Colors.white,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                'PFA Helper',
+                style: textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          _loadData();
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // PFA Info Card
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.blue.shade800,
-                          child: const Icon(Icons.business, color: Colors.white),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _pfa!.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'CUI: ${_pfa!.cui}',
-                                style: TextStyle(color: Colors.grey.shade600),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildInfoChip(
-                            Icons.work,
-                            _pfa!.activityType,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildInfoChip(
-                            Icons.calculate,
-                            _pfa!.isRealSystem ? 'Sistem Real' : 'Norme',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Current Month Summary
-            Text(
-              'Luna curentă (${SafeFormatters.formatDateWithMonth(DateTime.now())})',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    'Venituri',
-                    currentMonthSummary['totalIncome']!,
-                    Colors.green,
-                    Icons.trending_up,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildSummaryCard(
-                    'Cheltuieli',
-                    currentMonthSummary['totalExpenses']!,
-                    Colors.red,
-                    Icons.trending_down,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _buildSummaryCard(
-              'Profit net',
-              currentMonthSummary['netProfit']!,
-              Colors.blue,
-              Icons.account_balance_wallet,
-            ),
-            const SizedBox(height: 24),
-
-            // Annual Summary
-            Text(
-              'Rezumat anual $_selectedYear',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildReportRow(
-                      'Venituri totale',
-                      taxReport.totalIncome,
-                      Colors.green.shade700,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildReportRow(
-                      'Cheltuieli totale',
-                      taxReport.totalExpenses,
-                      Colors.red.shade700,
-                    ),
-                    const Divider(height: 24),
-                    _buildReportRow(
-                      'Venit net impozabil',
-                      taxReport.netTaxableIncome,
-                      Colors.blue.shade900,
-                      true,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildReportRow('Impozit venit (10%)', taxReport.incomeTax),
-                    const SizedBox(height: 8),
-                    _buildReportRow('CAS (25%)', taxReport.casContribution),
-                    const SizedBox(height: 8),
-                    _buildReportRow('CASS (10%)', taxReport.cassContribution),
-                    const Divider(height: 24),
-                    _buildReportRow(
-                      'Total taxe',
-                      taxReport.totalTaxes,
-                      Colors.orange.shade900,
-                      true,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildReportRow(
-                      'Profit după taxe',
-                      taxReport.netProfitAfterTaxes,
-                      Colors.green.shade900,
-                      true,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // VAT Warning
-            if (taxReport.requiresVATRegistration) ...[
-              const SizedBox(height: 16),
-              Card(
-                color: Colors.red.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(Icons.warning, color: Colors.red.shade700),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Atenție! Venit depășește pragul TVA (395.000 RON)',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primary,
+                      colorScheme.secondary,
                     ],
                   ),
                 ),
               ),
-            ],
-
-            const SizedBox(height: 24),
-
-            // Quick Actions
-            const Text(
-              'Acțiuni rapide',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      await context.push('/transactions');
-                      _loadData();
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Tranzacții'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade800,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.push('/reports');
-                    },
-                    icon: const Icon(Icons.assessment),
-                    label: const Text('Rapoarte'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoChip(IconData icon, String label) {
-    return Chip(
-      avatar: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-    );
-  }
-
-  Widget _buildSummaryCard(
-    String title,
-    double amount,
-    Color color,
-    IconData icon,
-  ) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              TaxCalculator.formatCurrency(amount),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReportRow(String label, double amount, [Color? color, bool isBold = false]) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            fontSize: isBold ? 15 : 14,
           ),
+
+          // Content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // PFA Info Card
+                  _buildPFAInfoCard(colorScheme, textTheme),
+                  const SizedBox(height: 24),
+
+                  // Year Selector
+                  _buildYearSelector(colorScheme, textTheme),
+                  const SizedBox(height: 24),
+
+                  // Financial Overview
+                  Text(
+                    'Situație Financiară $_selectedYear',
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildFinancialOverview(
+                    colorScheme,
+                    textTheme,
+                    taxReport,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Tax Summary
+                  Text(
+                    'Taxe și Contribuții',
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTaxSummary(colorScheme, textTheme, taxReport),
+                  const SizedBox(height: 24),
+
+                  // Quick Actions
+                  Text(
+                    'Acțiuni Rapide',
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildQuickActions(colorScheme),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPFAInfoCard(ColorScheme colorScheme, TextTheme textTheme) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.secondaryContainer,
+          ],
         ),
-        Text(
-          TaxCalculator.formatCurrency(amount),
-          style: TextStyle(
-            color: color,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            fontSize: isBold ? 15 : 14,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.business_rounded,
+              color: colorScheme.primary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _pfa!.name,
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'CUI: ${_pfa!.cui}',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildYearSelector(ColorScheme colorScheme, TextTheme textTheme) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(3, (index) {
+          final year = DateTime.now().year - index;
+          final isSelected = year == _selectedYear;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Material(
+              color: isSelected ? colorScheme.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedYear = year;
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  child: Text(
+                    year.toString(),
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: isSelected ? Colors.white : colorScheme.onSurface,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildFinancialOverview(
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    dynamic taxReport,
+  ) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricCard(
+                colorScheme,
+                textTheme,
+                title: 'Venituri',
+                value: SafeFormatters.formatCurrency(
+                  taxReport.totalTaxableIncome,
+                ),
+                icon: Icons.trending_up_rounded,
+                iconColor: Colors.green,
+                backgroundColor: Colors.green.shade50,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildMetricCard(
+                colorScheme,
+                textTheme,
+                title: 'Cheltuieli',
+                value: SafeFormatters.formatCurrency(
+                  taxReport.totalDeductibleExpenses,
+                ),
+                icon: Icons.trending_down_rounded,
+                iconColor: Colors.orange,
+                backgroundColor: Colors.orange.shade50,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildMetricCard(
+          colorScheme,
+          textTheme,
+          title: 'Profit Net',
+          value: SafeFormatters.formatCurrency(
+            taxReport.netTaxableIncome,
+          ),
+          icon: Icons.account_balance_wallet_rounded,
+          iconColor: colorScheme.primary,
+          backgroundColor: colorScheme.primaryContainer,
+          large: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTaxSummary(
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    dynamic taxReport,
+  ) {
+    return Column(
+      children: [
+        _buildTaxCard(
+          colorScheme,
+          textTheme,
+          title: 'Impozit pe Venit',
+          amount: taxReport.incomeTax,
+          icon: Icons.receipt_long_rounded,
+          color: Colors.blue,
+        ),
+        const SizedBox(height: 12),
+        _buildTaxCard(
+          colorScheme,
+          textTheme,
+          title: 'CAS (Pensie)',
+          amount: taxReport.casContribution,
+          icon: Icons.elderly_rounded,
+          color: Colors.purple,
+        ),
+        const SizedBox(height: 12),
+        _buildTaxCard(
+          colorScheme,
+          textTheme,
+          title: 'CASS (Sănătate)',
+          amount: taxReport.cassContribution,
+          icon: Icons.local_hospital_rounded,
+          color: Colors.red,
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.deepPurple.shade700,
+                Colors.deepPurple.shade500,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.calculate_rounded,
+                color: Colors.white,
+                size: 32,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Taxe și Contribuții',
+                      style: textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      SafeFormatters.formatCurrency(
+                        taxReport.totalTaxesAndContributions,
+                      ),
+                      style: textTheme.headlineMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  void _showYearPicker() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Selectează anul'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                final year = DateTime.now().year - index;
-                return ListTile(
-                  title: Text(year.toString()),
-                  selected: year == _selectedYear,
-                  onTap: () {
-                    setState(() {
-                      _selectedYear = year;
-                      _loadData();
-                    });
-                    Navigator.pop(context);
-                  },
-                );
-              },
+  Widget _buildMetricCard(
+    ColorScheme colorScheme,
+    TextTheme textTheme, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color iconColor,
+    required Color backgroundColor,
+    bool large = false,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(large ? 20 : 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: large ? 28 : 24,
+                ),
+              ),
+              if (large) const Spacer(),
+            ],
+          ),
+          SizedBox(height: large ? 16 : 12),
+          Text(
+            title,
+            style: textTheme.bodyMedium?.copyWith(
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        );
-      },
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style:
+                (large ? textTheme.headlineMedium : textTheme.titleLarge)
+                    ?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaxCard(
+    ColorScheme colorScheme,
+    TextTheme textTheme, {
+    required String title,
+    required double amount,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  SafeFormatters.formatCurrency(amount),
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(ColorScheme colorScheme) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildActionButton(
+            colorScheme,
+            label: 'Tranzacții',
+            icon: Icons.receipt_rounded,
+            color: colorScheme.primary,
+            onTap: () async {
+              await context.push('/transactions');
+              _loadData();
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildActionButton(
+            colorScheme,
+            label: 'Rapoarte',
+            icon: Icons.assessment_rounded,
+            color: Colors.green.shade700,
+            onTap: () {
+              context.push('/reports');
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(
+    ColorScheme colorScheme, {
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 32,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
