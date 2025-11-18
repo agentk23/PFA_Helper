@@ -7,6 +7,7 @@ import '../services/storage_service.dart';
 import '../utils/tax_calculator.dart';
 import '../utils/safe_formatters.dart';
 import '../utils/error_handler.dart';
+import '../widgets/fiscal_term_tooltip.dart';
 
 /// Home screen displaying financial overview and quick actions
 class HomeScreen extends StatefulWidget {
@@ -71,6 +72,15 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: colorScheme.primary,
             foregroundColor: Colors.white,
             actions: [
+              Semantics(
+                label: 'Ajutor și glosar fiscal',
+                button: true,
+                child: IconButton(
+                  icon: const Icon(Icons.help_outline),
+                  tooltip: 'Ajutor',
+                  onPressed: () => context.push('/help'),
+                ),
+              ),
               Semantics(
                 label: 'Profil și setări PFA',
                 button: true,
@@ -209,11 +219,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      'CUI: ${_pfa!.cui}',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'CUI: ${_pfa!.cui}',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        FiscalTermTooltip(
+                          term: 'CUI',
+                          iconSize: 14,
+                          iconColor: colorScheme.onPrimaryContainer.withOpacity(0.7),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -336,6 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
           iconColor: colorScheme.primary,
           backgroundColor: colorScheme.primaryContainer,
           large: true,
+          helpTerm: 'VENIT NET',
         ),
       ],
     );
@@ -355,6 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
           amount: taxReport.incomeTax,
           icon: Icons.receipt_long_rounded,
           color: Colors.blue,
+          helpTerm: 'IMPOZIT PE VENIT',
         ),
         const SizedBox(height: 12),
         _buildTaxCard(
@@ -364,6 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
           amount: taxReport.casContribution,
           icon: Icons.elderly_rounded,
           color: Colors.purple,
+          helpTerm: 'CAS',
         ),
         const SizedBox(height: 12),
         _buildTaxCard(
@@ -373,6 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
           amount: taxReport.cassContribution,
           icon: Icons.local_hospital_rounded,
           color: Colors.red,
+          helpTerm: 'CASS',
         ),
         const SizedBox(height: 16),
         Semantics(
@@ -440,6 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color iconColor,
     required Color backgroundColor,
     bool large = false,
+    String? helpTerm,
   }) {
     return Semantics(
       label: '$title: $value',
@@ -476,12 +501,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               SizedBox(height: large ? 16 : 12),
-              Text(
-                title,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (helpTerm != null) ...[
+                    const SizedBox(width: 4),
+                    FiscalTermTooltip(
+                      term: helpTerm,
+                      iconSize: 16,
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 4),
               Text(
@@ -507,6 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required double amount,
     required IconData icon,
     required Color color,
+    String? helpTerm,
   }) {
     return Semantics(
       label: '$title: ${SafeFormatters.formatCurrency(amount)}',
@@ -541,11 +580,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                        if (helpTerm != null) ...[
+                          const SizedBox(width: 4),
+                          FiscalTermTooltip(
+                            term: helpTerm,
+                            iconSize: 16,
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(

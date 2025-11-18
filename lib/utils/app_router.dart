@@ -6,6 +6,7 @@ import '../screens/pfa_profile_screen.dart';
 import '../screens/transactions_screen.dart';
 import '../screens/reports_screen.dart';
 import '../screens/anaf_invoices_screen.dart';
+import '../screens/help_screen.dart';
 import '../services/storage_service.dart';
 
 /// Application router configuration using go_router
@@ -49,6 +50,14 @@ class AppRouter {
         path: '/invoices',
         name: 'invoices',
         builder: (context, state) => const ANAFInvoicesScreen(),
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        builder: (context, state) {
+          final initialTerm = state.uri.queryParameters['term'];
+          return HelpScreen(initialTerm: initialTerm);
+        },
       ),
     ],
     redirect: (context, state) {
