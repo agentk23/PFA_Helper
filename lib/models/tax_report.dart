@@ -1,5 +1,9 @@
 /// Tax report model for calculating annual taxes
-/// Supports mixed tax rates based on CAEN codes (standard 10% + special 3% rate)
+///
+/// IMPORTANT: All PFA (Persoană Fizică Autorizată) income in Romania is taxed at 10%
+/// regardless of activity type or CAEN code. The previous 3% rate was INCORRECT.
+///
+/// Legal basis: Codul Fiscal Art. 68 (2025)
 class TaxReport {
   final double totalTaxableIncome;
   final double totalNonTaxableIncome;
@@ -7,13 +11,16 @@ class TaxReport {
   final double totalNonDeductibleExpenses;
   final int year;
 
-  // CAEN-specific income tracking
-  final double incomeAt3PercentRate; // Income from CAEN codes with 3% special rate
-  final double incomeAt10PercentRate; // Income from standard CAEN codes
-
-  // CAEN breakdown (code -> amount)
+  // CAEN breakdown (code -> amount) - for informational purposes only
+  // Does NOT affect tax rate calculation (all PFA income taxed at 10%)
   final Map<String, double>? incomeByCAEN;
   final Map<String, double>? expensesByCAEN;
+
+  // Deprecated fields - kept for backward compatibility but not used
+  @Deprecated('PFA income is always taxed at 10%. This field is no longer used.')
+  final double incomeAt3PercentRate;
+  @Deprecated('All PFA income is taxed at 10%. Use totalTaxableIncome instead.')
+  final double incomeAt10PercentRate;
 
   TaxReport({
     required this.totalTaxableIncome,
@@ -21,8 +28,8 @@ class TaxReport {
     required this.totalDeductibleExpenses,
     required this.totalNonDeductibleExpenses,
     required this.year,
-    this.incomeAt3PercentRate = 0.0,
-    this.incomeAt10PercentRate = 0.0,
+    @Deprecated('Not used - all PFA income taxed at 10%') this.incomeAt3PercentRate = 0.0,
+    @Deprecated('Not used - all PFA income taxed at 10%') this.incomeAt10PercentRate = 0.0,
     this.incomeByCAEN,
     this.expensesByCAEN,
   });
@@ -42,56 +49,38 @@ class TaxReport {
     return totalDeductibleExpenses + totalNonDeductibleExpenses;
   }
 
-  /// Income tax with support for mixed rates (3% for IT/software + 10% standard)
-  /// Calculates proportionally based on income from different CAEN categories
+  /// Income tax for PFA (Persoană Fizică Autorizată)
+  ///
+  /// FIXED in v2.0.0: ALL PFA income in Romania is taxed at 10% flat rate
+  /// regardless of activity type or CAEN code.
+  ///
+  /// Previous versions incorrectly calculated 3% for certain IT CAEN codes.
+  /// The 3% rate applies ONLY to SRL microenterprises, NOT to PFA.
+  ///
+  /// Calculation:
+  /// Net Taxable Income = Gross Income - Deductible Expenses - CAS - CASS
+  /// Income Tax = Net Taxable Income × 10%
+  ///
+  /// Legal basis: Codul Fiscal Art. 68 (2025)
   double get incomeTax {
-    // If we have specific breakdown, calculate with mixed rates
-    if (incomeAt3PercentRate > 0 || incomeAt10PercentRate > 0) {
-      // Calculate net income proportionally
-      final totalIncome = incomeAt3PercentRate + incomeAt10PercentRate;
-      if (totalIncome <= 0) return 0;
+    // First, calculate net income after deducting CAS and CASS
+    // (these are deductible for PFA in sistem real)
+    final netIncomeAfterContributions = netTaxableIncome - casContribution - cassContribution;
+    final taxableBase = netIncomeAfterContributions.clamp(0.0, double.infinity);
 
-      // Proportion of expenses to each income type
-      final ratio3Percent = incomeAt3PercentRate / totalIncome;
-      final ratio10Percent = incomeAt10PercentRate / totalIncome;
-
-      final expenses3Percent = totalDeductibleExpenses * ratio3Percent;
-      final expenses10Percent = totalDeductibleExpenses * ratio10Percent;
-
-      final netIncome3Percent = (incomeAt3PercentRate - expenses3Percent).clamp(0.0, double.infinity);
-      final netIncome10Percent = (incomeAt10PercentRate - expenses10Percent).clamp(0.0, double.infinity);
-
-      return (netIncome3Percent * 0.03) + (netIncome10Percent * 0.10);
-    }
-
-    // Fallback: standard 10% rate
-    return netTaxableIncome * 0.10;
+    // Apply 10% flat rate to all PFA income
+    return taxableBase * 0.10;
   }
 
   /// Get breakdown of income tax by rate
+  ///
+  /// UPDATED in v2.0.0: Now returns only 10% standard rate for PFA
+  /// The 'special' rate is kept at 0.0 for backward compatibility
   Map<String, double> get incomeTaxBreakdown {
-    if (incomeAt3PercentRate > 0 || incomeAt10PercentRate > 0) {
-      final totalIncome = incomeAt3PercentRate + incomeAt10PercentRate;
-      if (totalIncome <= 0) {
-        return {'standard': 0.0, 'special': 0.0};
-      }
-
-      final ratio3Percent = incomeAt3PercentRate / totalIncome;
-      final ratio10Percent = incomeAt10PercentRate / totalIncome;
-
-      final expenses3Percent = totalDeductibleExpenses * ratio3Percent;
-      final expenses10Percent = totalDeductibleExpenses * ratio10Percent;
-
-      final netIncome3Percent = (incomeAt3PercentRate - expenses3Percent).clamp(0.0, double.infinity);
-      final netIncome10Percent = (incomeAt10PercentRate - expenses10Percent).clamp(0.0, double.infinity);
-
-      return {
-        'special': netIncome3Percent * 0.03,
-        'standard': netIncome10Percent * 0.10,
-      };
-    }
-
-    return {'standard': netTaxableIncome * 0.10, 'special': 0.0};
+    return {
+      'standard': incomeTax,
+      'special': 0.0, // No special rate for PFA (only for SRL microenterprises)
+    };
   }
 
   /// Minimum gross salary for 2025
@@ -137,9 +126,12 @@ class TaxReport {
     return netTaxableIncome - totalTaxes;
   }
 
-  /// Check if income exceeds VAT registration threshold (395,000 RON as of Sept 2025)
+  /// Check if income exceeds VAT registration threshold
+  ///
+  /// UPDATED in v2.0.0: Threshold reduced from 395,000 to 300,000 RON (2024 legislation)
+  /// Legal basis: Codul Fiscal Art. 291 (modified 2024)
   bool get requiresVATRegistration {
-    return totalIncome >= 395000.0;
+    return totalIncome >= 300000.0;
   }
 
   /// Generate summary map for display

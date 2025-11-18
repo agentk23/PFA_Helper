@@ -1,15 +1,23 @@
 import '../models/transaction.dart';
 import '../models/transaction_category.dart';
 import '../models/tax_report.dart';
-import '../models/caen_code.dart';
 
-/// Utility class for tax calculations with CAEN code support
+/// Utility class for PFA tax calculations (Romania 2025)
+///
+/// IMPORTANT: All PFA income in Romania is taxed at 10% flat rate.
+/// The previous implementation incorrectly applied 3% for certain CAEN codes.
+///
+/// Legal basis: Codul Fiscal Art. 68 (2025)
 class TaxCalculator {
-  /// CAEN codes that qualify for 3% special tax rate (IT/Software development)
-  static final specialRateCodes = CAENCode.specialRateCodes;
-
   /// Calculate tax report for a given year from list of transactions
-  /// Supports mixed tax rates based on CAEN codes
+  ///
+  /// Calculates annual tax obligations for PFA including:
+  /// - Income tax (10% on net taxable income after CAS/CASS)
+  /// - CAS (social security) - 25% with thresholds
+  /// - CASS (health insurance) - 10% with min/max limits
+  ///
+  /// CAEN codes are tracked for informational purposes but do NOT
+  /// affect tax rate calculations (all PFA income taxed at 10%).
   static TaxReport calculateAnnualReport(
     List<Transaction> transactions,
     int year,
@@ -24,11 +32,7 @@ class TaxCalculator {
     double totalDeductibleExpenses = 0.0;
     double totalNonDeductibleExpenses = 0.0;
 
-    // Track income by tax rate
-    double incomeAt3Percent = 0.0;
-    double incomeAt10Percent = 0.0;
-
-    // Track by CAEN code
+    // Track by CAEN code (for informational/reporting purposes only)
     Map<String, double> incomeByCAEN = {};
     Map<String, double> expensesByCAEN = {};
 
@@ -37,15 +41,7 @@ class TaxCalculator {
         case TransactionCategory.taxableIncome:
           totalTaxableIncome += transaction.amount;
 
-          // Categorize by tax rate based on CAEN code
-          if (transaction.caenCode != null &&
-              specialRateCodes.contains(transaction.caenCode)) {
-            incomeAt3Percent += transaction.amount;
-          } else {
-            incomeAt10Percent += transaction.amount;
-          }
-
-          // Track by CAEN code
+          // Track by CAEN code for reporting (not used for tax calculation)
           if (transaction.caenCode != null) {
             incomeByCAEN[transaction.caenCode!] =
                 (incomeByCAEN[transaction.caenCode!] ?? 0.0) + transaction.amount;
@@ -59,7 +55,7 @@ class TaxCalculator {
         case TransactionCategory.deductibleExpense:
           totalDeductibleExpenses += transaction.amount;
 
-          // Track expenses by CAEN code
+          // Track expenses by CAEN code for reporting
           if (transaction.caenCode != null) {
             expensesByCAEN[transaction.caenCode!] =
                 (expensesByCAEN[transaction.caenCode!] ?? 0.0) + transaction.amount;
@@ -78,8 +74,9 @@ class TaxCalculator {
       totalDeductibleExpenses: totalDeductibleExpenses,
       totalNonDeductibleExpenses: totalNonDeductibleExpenses,
       year: year,
-      incomeAt3PercentRate: incomeAt3Percent,
-      incomeAt10PercentRate: incomeAt10Percent,
+      // Deprecated fields - set to 0 for backward compatibility
+      incomeAt3PercentRate: 0.0,
+      incomeAt10PercentRate: totalTaxableIncome,
       incomeByCAEN: incomeByCAEN.isNotEmpty ? incomeByCAEN : null,
       expensesByCAEN: expensesByCAEN.isNotEmpty ? expensesByCAEN : null,
     );
