@@ -211,7 +211,7 @@ class _CAENPickerScreenState extends State<CAENPickerScreen> {
                   'Confirmă (${_localSelectedCodes.length})',
                   style: TextStyle(
                     color: _localSelectedCodes.isEmpty
-                        ? colorScheme.onSurface.withOpacity(0.38)
+                        ? colorScheme.onSurface.withValues(alpha: 0.38)
                         : colorScheme.primary,
                   ),
                 ),
@@ -400,7 +400,7 @@ class _CAENPickerScreenState extends State<CAENPickerScreen> {
                               selected: isSelected,
                               child: Material(
                                 color: isSelected
-                                    ? colorScheme.primaryContainer.withOpacity(0.3)
+                                    ? colorScheme.primaryContainer.withValues(alpha: 0.3)
                                     : null,
                                 child: InkWell(
                                   onTap: () => _toggleCodeSelection(code),

@@ -226,14 +226,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           'CUI: ${_pfa!.cui}',
                           style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                            color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                           ),
                         ),
                         const SizedBox(width: 4),
                         FiscalTermTooltip(
                           term: 'CUI',
                           iconSize: 14,
-                          iconColor: colorScheme.onPrimaryContainer.withOpacity(0.7),
+                          iconColor: colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
                         ),
                       ],
                     ),
@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                       SemanticsService.announce(
                         'An selectat: $year',
-                        TextDirection.ltr,
+                        Assertiveness.polite,
                       );
                     },
                     borderRadius: BorderRadius.circular(8),
@@ -568,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(

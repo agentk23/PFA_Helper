@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../models/transaction_category.dart';
@@ -105,7 +106,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         if (mounted) {
           SemanticsService.announce(
             'Tranzacție ștearsă',
-            TextDirection.ltr,
+            Assertiveness.polite,
           );
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -170,7 +171,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   category == null
                       ? 'Afișare toate categoriile'
                       : 'Filtru: ${category.displayName}',
-                  TextDirection.ltr,
+                  Assertiveness.polite,
                 );
               },
               itemBuilder: (context) => [
@@ -263,7 +264,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       });
                       SemanticsService.announce(
                         'Filtru eliminat',
-                        TextDirection.ltr,
+                        Assertiveness.polite,
                       );
                     },
                   ),
@@ -366,7 +367,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(

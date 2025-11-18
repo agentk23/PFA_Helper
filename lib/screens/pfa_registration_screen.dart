@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../models/pfa.dart';
@@ -90,7 +91,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
     try {
       final result = await _anafService.validateCUI(cui);
 
-      if (result.isSuccess && result.data == true) {
+      if (result.success && result.data == true) {
         // Try to get company info
         final infoResult = await _anafService.getCompanyInfo(cui);
 
@@ -100,7 +101,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
             _isValidatingCUI = false;
           });
 
-          if (infoResult.isSuccess) {
+          if (infoResult.success) {
             final companyData = infoResult.data!;
             final dateGenerale = companyData['date_generale'] as Map<String, dynamic>?;
 
@@ -160,7 +161,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            dialogTheme: DialogTheme(
+            dialogTheme: DialogThemeData(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -180,7 +181,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
         // Announce date change to screen readers
         SemanticsService.announce(
           'Data înregistrării selectată: ${DateFormat('dd MMMM yyyy').format(picked)}',
-          TextDirection.ltr,
+          Assertiveness.polite,
         );
       }
     }
@@ -205,7 +206,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
       if (mounted) {
         SemanticsService.announce(
           '${result.length} coduri CAEN selectate',
-          TextDirection.ltr,
+          Assertiveness.polite,
         );
       }
     }
@@ -224,7 +225,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
     if (mounted) {
       SemanticsService.announce(
         '${_selectedCAENCodes[index].code} setat ca activitate principală',
-        TextDirection.ltr,
+        Assertiveness.polite,
       );
     }
   }
@@ -237,7 +238,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
     if (mounted) {
       SemanticsService.announce(
         'Cod CAEN eliminat. ${_selectedCAENCodes.length} coduri rămase',
-        TextDirection.ltr,
+        Assertiveness.polite,
       );
     }
   }
@@ -247,7 +248,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
       // Announce validation errors to screen readers
       SemanticsService.announce(
         'Formularul conține erori. Verificați câmpurile marcate.',
-        TextDirection.ltr,
+        Assertiveness.assertive,
       );
       return;
     }
@@ -293,7 +294,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
       if (mounted) {
         SemanticsService.announce(
           'PFA înregistrat cu succes',
-          TextDirection.ltr,
+          Assertiveness.polite,
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -541,7 +542,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
                                   child: Card(
                                     margin: const EdgeInsets.only(bottom: 8),
                                     color: code.isPrimary
-                                        ? colorScheme.primaryContainer.withOpacity(0.3)
+                                        ? colorScheme.primaryContainer.withValues(alpha: 0.3)
                                         : null,
                                     child: ListTile(
                                       leading: code.isPrimary
@@ -762,7 +763,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
                                   });
                                   SemanticsService.announce(
                                     'Sistem Real selectat',
-                                    TextDirection.ltr,
+                                    Assertiveness.polite,
                                   );
                                 },
                               ),
@@ -777,7 +778,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
                                   });
                                   SemanticsService.announce(
                                     'Norme de venit selectat',
-                                    TextDirection.ltr,
+                                    Assertiveness.polite,
                                   );
                                 },
                               ),

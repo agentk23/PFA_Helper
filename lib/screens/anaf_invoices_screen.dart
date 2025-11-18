@@ -91,10 +91,12 @@ class _ANAFInvoicesScreenState extends State<ANAFInvoicesScreen> {
           _isLoading = false;
         });
 
-        SemanticsService.announce(
-          '${_invoices.length} facturi încărcate',
-          TextDirection.ltr,
-        );
+        if (mounted) {
+          SemanticsService.announce(
+            '${_invoices.length} facturi încărcate',
+            Assertiveness.polite,
+          );
+        }
       } else {
         setState(() {
           _errorMessage = response.error ?? 'Eroare la încărcarea facturilor';
@@ -253,13 +255,15 @@ class _ANAFInvoicesScreenState extends State<ANAFInvoicesScreen> {
       return;
     }
 
-    final pfa = StorageService.getPFA();
+    final pfa = StorageService.getCurrentPFA();
     if (pfa == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PFA neînregistrat. Vă rugăm configurați profilul mai întâi.'),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PFA neînregistrat. Vă rugăm configurați profilul mai întâi.'),
+          ),
+        );
+      }
       return;
     }
 
@@ -852,7 +856,7 @@ class _ANAFInvoicesScreenState extends State<ANAFInvoicesScreen> {
       if (mounted) {
         SemanticsService.announce(
           'Interval selectat: ${DateFormat('dd MMM').format(range.start)} - ${DateFormat('dd MMM yyyy').format(range.end)}',
-          TextDirection.ltr,
+          Assertiveness.polite,
         );
       }
     }
@@ -860,8 +864,6 @@ class _ANAFInvoicesScreenState extends State<ANAFInvoicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Facturi ANAF'),
@@ -1020,7 +1022,7 @@ class _ANAFInvoicesScreenState extends State<ANAFInvoicesScreen> {
                                 _applyFilters();
                                 SemanticsService.announce(
                                   'Căutare ștearsă',
-                                  TextDirection.ltr,
+                                  Assertiveness.polite,
                                 );
                               },
                             ),
@@ -1053,7 +1055,7 @@ class _ANAFInvoicesScreenState extends State<ANAFInvoicesScreen> {
                           });
                           SemanticsService.announce(
                             'Afișează toate facturile',
-                            TextDirection.ltr,
+                            Assertiveness.polite,
                           );
                         },
                       ),
@@ -1080,7 +1082,7 @@ class _ANAFInvoicesScreenState extends State<ANAFInvoicesScreen> {
                                 selected
                                     ? 'Filtrat după $statusLabel'
                                     : 'Filtru șters',
-                                TextDirection.ltr,
+                                Assertiveness.polite,
                               );
                             },
                           ),

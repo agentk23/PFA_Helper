@@ -77,13 +77,13 @@ class D212Generator {
         totalDeductibleExpenses: taxReport.totalDeductibleExpenses,
         netTaxableIncome: taxReport.netTaxableIncome,
 
-        // Income split by rate
-        incomeAt3PercentRate: taxReport.incomeAt3PercentRate,
-        incomeAt10PercentRate: taxReport.incomeAt10PercentRate,
+        // Income split by rate (PFA uses 10% flat rate for all income)
+        incomeAt3PercentRate: 0.0, // Not used for PFA
+        incomeAt10PercentRate: taxReport.totalTaxableIncome,
 
-        // Expenses allocated proportionally
-        expensesFor3PercentIncome: taxReport.expensesAllocatedTo3Percent,
-        expensesFor10PercentIncome: taxReport.expensesAllocatedTo10Percent,
+        // Expenses allocated (all expenses are for 10% rate income)
+        expensesFor3PercentIncome: 0.0, // Not used for PFA
+        expensesFor10PercentIncome: taxReport.totalDeductibleExpenses,
 
         // Social contributions
         casContribution: taxReport.casContribution,
@@ -118,23 +118,15 @@ class D212Generator {
   }
 
   /// Calculate income tax for 3% rate activities (IT/software)
+  /// NOTE: For PFA, this is always 0 as all income is taxed at 10%
   static double _calculateIncomeTaxAt3Percent(TaxReport report) {
-    if (report.incomeAt3PercentRate == 0) return 0.0;
-
-    final netIncome = report.incomeAt3PercentRate -
-        report.expensesAllocatedTo3Percent;
-
-    return netIncome * 0.03;
+    return 0.0; // PFA doesn't use 3% rate
   }
 
   /// Calculate income tax for 10% rate activities (standard)
+  /// For PFA, all income is taxed at 10% flat rate
   static double _calculateIncomeTaxAt10Percent(TaxReport report) {
-    if (report.incomeAt10PercentRate == 0) return 0.0;
-
-    final netIncome = report.incomeAt10PercentRate -
-        report.expensesAllocatedTo10Percent;
-
-    return netIncome * 0.10;
+    return report.incomeTax; // Use the calculated income tax from TaxReport
   }
 
   /// Generate detailed section breakdown for D212
