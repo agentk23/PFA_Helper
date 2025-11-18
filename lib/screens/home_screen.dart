@@ -69,6 +69,17 @@ class _HomeScreenState extends State<HomeScreen> {
             pinned: true,
             backgroundColor: colorScheme.primary,
             foregroundColor: Colors.white,
+            actions: [
+              Semantics(
+                label: 'Profil și setări PFA',
+                button: true,
+                child: IconButton(
+                  icon: const Icon(Icons.account_circle),
+                  tooltip: 'Profil PFA',
+                  onPressed: () => context.push('/profile'),
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 'PFA Helper',

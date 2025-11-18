@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/home_screen.dart';
 import '../screens/pfa_registration_screen.dart';
+import '../screens/pfa_profile_screen.dart';
 import '../screens/transactions_screen.dart';
 import '../screens/reports_screen.dart';
 import '../services/storage_service.dart';
@@ -27,6 +28,11 @@ class AppRouter {
         path: '/registration',
         name: 'registration',
         builder: (context, state) => const PFARegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const PFAProfileScreen(),
       ),
       GoRoute(
         path: '/transactions',
