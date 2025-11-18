@@ -5,6 +5,7 @@ import '../screens/pfa_registration_screen.dart';
 import '../screens/pfa_profile_screen.dart';
 import '../screens/transactions_screen.dart';
 import '../screens/reports_screen.dart';
+import '../screens/anaf_invoices_screen.dart';
 import '../services/storage_service.dart';
 
 /// Application router configuration using go_router
@@ -43,6 +44,11 @@ class AppRouter {
         path: '/reports',
         name: 'reports',
         builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: '/invoices',
+        name: 'invoices',
+        builder: (context, state) => const ANAFInvoicesScreen(),
       ),
     ],
     redirect: (context, state) {

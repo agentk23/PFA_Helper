@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:go_router/go_router.dart';
 import '../models/pfa.dart';
 import '../models/transaction.dart';
@@ -164,103 +165,123 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPFAInfoCard(ColorScheme colorScheme, TextTheme textTheme) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primaryContainer,
-            colorScheme.secondaryContainer,
-          ],
+    return Semantics(
+      label: 'Informații PFA: ${_pfa!.name}, CUI: ${_pfa!.cui}',
+      readOnly: true,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              colorScheme.primaryContainer,
+              colorScheme.secondaryContainer,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
         ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.business_rounded,
-              color: colorScheme.primary,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _pfa!.name,
-                  style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
+        padding: const EdgeInsets.all(20),
+        child: ExcludeSemantics(
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'CUI: ${_pfa!.cui}',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onPrimaryContainer.withOpacity(0.8),
-                  ),
+                child: Icon(
+                  Icons.business_rounded,
+                  color: colorScheme.primary,
+                  size: 28,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _pfa!.name,
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'CUI: ${_pfa!.cui}',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildYearSelector(ColorScheme colorScheme, TextTheme textTheme) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(3, (index) {
-          final year = DateTime.now().year - index;
-          final isSelected = year == _selectedYear;
+    return Semantics(
+      label: 'Selector an fiscal. An selectat: $_selectedYear',
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            final year = DateTime.now().year - index;
+            final isSelected = year == _selectedYear;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Material(
-              color: isSelected ? colorScheme.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    _selectedYear = year;
-                  });
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  child: Text(
-                    year.toString(),
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: isSelected ? Colors.white : colorScheme.onSurface,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Semantics(
+                label: 'Selectează anul $year${isSelected ? '. Selectat' : ''}',
+                button: true,
+                selected: isSelected,
+                child: Material(
+                  color: isSelected ? colorScheme.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedYear = year;
+                      });
+                      SemanticsService.announce(
+                        'An selectat: $year',
+                        TextDirection.ltr,
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: ExcludeSemantics(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        child: Text(
+                          year.toString(),
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: isSelected ? Colors.white : colorScheme.onSurface,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ),
       ),
     );
   }
@@ -354,50 +375,56 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.red,
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.deepPurple.shade700,
-                Colors.deepPurple.shade500,
-              ],
+        Semantics(
+          label: 'Total taxe și contribuții: ${SafeFormatters.formatCurrency(taxReport.totalTaxes)}',
+          readOnly: true,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.deepPurple.shade700,
+                  Colors.deepPurple.shade500,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
             ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.calculate_rounded,
-                color: Colors.white,
-                size: 32,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Total Taxe și Contribuții',
-                      style: textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
+            child: ExcludeSemantics(
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calculate_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total Taxe și Contribuții',
+                          style: textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          SafeFormatters.formatCurrency(
+                            taxReport.totalTaxes,
+                          ),
+                          style: textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      SafeFormatters.formatCurrency(
-                        taxReport.totalTaxes,
-                      ),
-                      style: textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ],
@@ -414,55 +441,61 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color backgroundColor,
     bool large = false,
   }) {
-    return Container(
-      padding: EdgeInsets.all(large ? 20 : 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
+    return Semantics(
+      label: '$title: $value',
+      readOnly: true,
+      child: Container(
+        padding: EdgeInsets.all(large ? 20 : 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        child: ExcludeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: large ? 28 : 24,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: backgroundColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: iconColor,
+                      size: large ? 28 : 24,
+                    ),
+                  ),
+                  if (large) const Spacer(),
+                ],
+              ),
+              SizedBox(height: large ? 16 : 12),
+              Text(
+                title,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              if (large) const Spacer(),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style:
+                    (large ? textTheme.headlineMedium : textTheme.titleLarge)
+                        ?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
             ],
           ),
-          SizedBox(height: large ? 16 : 12),
-          Text(
-            title,
-            style: textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style:
-                (large ? textTheme.headlineMedium : textTheme.titleLarge)
-                    ?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -475,83 +508,103 @@ class _HomeScreenState extends State<HomeScreen> {
     required IconData icon,
     required Color color,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
+    return Semantics(
+      label: '$title: ${SafeFormatters.formatCurrency(amount)}',
+      readOnly: true,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
+        child: ExcludeSemantics(
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  SafeFormatters.formatCurrency(amount),
-                  style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 24,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      SafeFormatters.formatCurrency(amount),
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildQuickActions(ColorScheme colorScheme) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildActionButton(
-            colorScheme,
-            label: 'Tranzacții',
-            icon: Icons.receipt_rounded,
-            color: colorScheme.primary,
-            onTap: () async {
-              await context.push('/transactions');
-              _loadData();
-            },
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionButton(
+                colorScheme,
+                label: 'Tranzacții',
+                icon: Icons.receipt_rounded,
+                color: colorScheme.primary,
+                onTap: () async {
+                  await context.push('/transactions');
+                  _loadData();
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionButton(
+                colorScheme,
+                label: 'Rapoarte',
+                icon: Icons.assessment_rounded,
+                color: Colors.green.shade700,
+                onTap: () {
+                  context.push('/reports');
+                },
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildActionButton(
-            colorScheme,
-            label: 'Rapoarte',
-            icon: Icons.assessment_rounded,
-            color: Colors.green.shade700,
-            onTap: () {
-              context.push('/reports');
-            },
-          ),
+        const SizedBox(height: 12),
+        _buildActionButton(
+          colorScheme,
+          label: 'Facturi ANAF',
+          icon: Icons.description_rounded,
+          color: Colors.deepOrange.shade700,
+          onTap: () {
+            context.push('/invoices');
+          },
         ),
       ],
     );
@@ -564,31 +617,37 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
+    return Semantics(
+      label: 'Deschide $label',
+      button: true,
+      child: Material(
+        color: color,
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                color: Colors.white,
-                size: 32,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: ExcludeSemantics(
+              child: Column(
+                children: [
+                  Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

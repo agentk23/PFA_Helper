@@ -310,39 +310,153 @@ class D212Generator {
     ];
   }
 
-  /// Generate XML representation (simplified, would need full XSD compliance)
+  /// Generate ANAF-compliant XML representation
+  ///
+  /// Creates XML structure compatible with ANAF D212 XSD schema
+  /// for electronic submission via SPV (Spațiul Privat Virtual)
   static String generateXML(D212Declaration declaration) {
     final buffer = StringBuffer();
+    final now = DateTime.now();
 
+    // XML header with encoding
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    buffer.writeln('<declaratieD212>');
+
+    // Root element with namespace declarations
+    buffer.writeln('<declaratie xmlns="mfp:anaf:dgti:d212:declaratie:v1" '
+        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">');
+
+    // Declaration metadata
+    buffer.writeln('  <meta>');
+    buffer.writeln('    <dataDeclaratie>${now.toIso8601String().split('T')[0]}</dataDeclaratie>');
+    buffer.writeln('    <tipDeclaratie>${declaration.isRectificative ? 'rectificativa' : 'initiala'}</tipDeclaratie>');
+    if (declaration.isRectificative && declaration.previousDeclarationNumber != null) {
+      buffer.writeln('    <numarDeclaratieAnterioara>${declaration.previousDeclarationNumber}</numarDeclaratieAnterioara>');
+    }
+    buffer.writeln('    <anRaportat>${declaration.fiscalYear}</anRaportat>');
+    buffer.writeln('  </meta>');
+
+    // Personal identification section
     buffer.writeln('  <identificare>');
-    buffer.writeln('    <cnp>${declaration.formattedCNP}</cnp>');
-    buffer.writeln('    <nume>${declaration.lastName}</nume>');
-    buffer.writeln('    <prenume>${declaration.firstName}</prenume>');
-    buffer.writeln('    <cui>${declaration.formattedCUI}</cui>');
-    buffer.writeln('    <denumire>${declaration.pfaName}</denumire>');
+    buffer.writeln('    <persoanaFizica>');
+    buffer.writeln('      <cnp>${declaration.formattedCNP}</cnp>');
+    buffer.writeln('      <nume>${_xmlEscape(declaration.lastName)}</nume>');
+    buffer.writeln('      <prenume>${_xmlEscape(declaration.firstName)}</prenume>');
+    buffer.writeln('      <adresa>${_xmlEscape(declaration.address)}</adresa>');
+    buffer.writeln('      <telefon>${_xmlEscape(declaration.phone)}</telefon>');
+    buffer.writeln('      <email>${_xmlEscape(declaration.email)}</email>');
+    buffer.writeln('    </persoanaFizica>');
+    buffer.writeln('    <pfa>');
+    buffer.writeln('      <cui>${declaration.formattedCUI}</cui>');
+    buffer.writeln('      <denumire>${_xmlEscape(declaration.pfaName)}</denumire>');
+    buffer.writeln('    </pfa>');
     buffer.writeln('  </identificare>');
+
+    // Fiscal period
     buffer.writeln('  <perioadaFiscala>');
-    buffer.writeln('    <an>${declaration.fiscalYear}</an>');
+    buffer.writeln('    <dataInceput>${declaration.fiscalYear}-01-01</dataInceput>');
+    buffer.writeln('    <dataSfarsit>${declaration.fiscalYear}-12-31</dataSfarsit>');
     buffer.writeln('  </perioadaFiscala>');
+
+    // Chapter I: Independent activities income
     buffer.writeln('  <capitolI>');
+
+    // Section 1: Income details
     buffer.writeln('    <sectiune1>');
-    buffer.writeln('      <venituriTotale>${declaration.totalGrossIncome.toStringAsFixed(2)}</venituriTotale>');
-    buffer.writeln('      <cheltuieliDeductibile>${declaration.totalDeductibleExpenses.toStringAsFixed(2)}</cheltuieliDeductibile>');
-    buffer.writeln('      <venitNetImpozabil>${declaration.netTaxableIncome.toStringAsFixed(2)}</venitNetImpozabil>');
+    buffer.writeln('      <titlu>Date privind veniturile din activitati independente</titlu>');
+    buffer.writeln('      <venituri>');
+    buffer.writeln('        <totalVenituriRealizeate>${_formatAmount(declaration.totalGrossIncome)}</totalVenituriRealizeate>');
+    buffer.writeln('        <venituriBazaCalcul3Procent>${_formatAmount(declaration.incomeAt3PercentRate)}</venituriBazaCalcul3Procent>');
+    buffer.writeln('        <venituriBazaCalcul10Procent>${_formatAmount(declaration.incomeAt10PercentRate)}</venituriBazaCalcul10Procent>');
+    buffer.writeln('      </venituri>');
+    buffer.writeln('      <cheltuieli>');
+    buffer.writeln('        <totalCheltuieliDeductibile>${_formatAmount(declaration.totalDeductibleExpenses)}</totalCheltuieliDeductibile>');
+    buffer.writeln('        <cheltuieliAlocate3Procent>${_formatAmount(declaration.expensesFor3PercentIncome)}</cheltuieliAlocate3Procent>');
+    buffer.writeln('        <cheltuieliAlocate10Procent>${_formatAmount(declaration.expensesFor10PercentIncome)}</cheltuieliAlocate10Procent>');
+    buffer.writeln('      </cheltuieli>');
+    buffer.writeln('      <venitNetImpozabil>${_formatAmount(declaration.netTaxableIncome)}</venitNetImpozabil>');
     buffer.writeln('    </sectiune1>');
+
+    // Section 3: Social insurance contributions
     buffer.writeln('    <sectiune3>');
-    buffer.writeln('      <contributiiCAS>${declaration.casContribution.toStringAsFixed(2)}</contributiiCAS>');
-    buffer.writeln('      <contributiiCASS>${declaration.cassContribution.toStringAsFixed(2)}</contributiiCASS>');
+    buffer.writeln('      <titlu>Determinarea contributiilor sociale obligatorii</titlu>');
+    buffer.writeln('      <contributii>');
+    buffer.writeln('        <cas>');
+    buffer.writeln('          <suma>${_formatAmount(declaration.casContribution)}</suma>');
+    buffer.writeln('          <cota>25</cota>');
+    buffer.writeln('        </cas>');
+    buffer.writeln('        <cass>');
+    buffer.writeln('          <suma>${_formatAmount(declaration.cassContribution)}</suma>');
+    buffer.writeln('          <cota>10</cota>');
+    buffer.writeln('        </cass>');
+    buffer.writeln('      </contributii>');
     buffer.writeln('    </sectiune3>');
+
+    // Section 4: Income tax calculation
     buffer.writeln('    <sectiune4>');
-    buffer.writeln('      <impozitVenit>${declaration.totalIncomeTax.toStringAsFixed(2)}</impozitVenit>');
-    buffer.writeln('      <totalObligatii>${declaration.totalAnnualTaxObligation.toStringAsFixed(2)}</totalObligatii>');
+    buffer.writeln('      <titlu>Determinarea impozitului pe venit</titlu>');
+    buffer.writeln('      <impozit>');
+    buffer.writeln('        <impozit3Procent>');
+    buffer.writeln('          <suma>${_formatAmount(declaration.incomeTaxFrom3PercentRate)}</suma>');
+    buffer.writeln('          <cota>3</cota>');
+    buffer.writeln('          <bazaCalcul>${_formatAmount(declaration.incomeAt3PercentRate - declaration.expensesFor3PercentIncome)}</bazaCalcul>');
+    buffer.writeln('        </impozit3Procent>');
+    buffer.writeln('        <impozit10Procent>');
+    buffer.writeln('          <suma>${_formatAmount(declaration.incomeTaxFrom10PercentRate)}</suma>');
+    buffer.writeln('          <cota>10</cota>');
+    buffer.writeln('          <bazaCalcul>${_formatAmount(declaration.incomeAt10PercentRate - declaration.expensesFor10PercentIncome)}</bazaCalcul>');
+    buffer.writeln('        </impozit10Procent>');
+    buffer.writeln('        <totalImpozitVenit>${_formatAmount(declaration.totalIncomeTax)}</totalImpozitVenit>');
+    buffer.writeln('      </impozit>');
     buffer.writeln('    </sectiune4>');
+
     buffer.writeln('  </capitolI>');
-    buffer.writeln('</declaratieD212>');
+
+    // Summary section
+    buffer.writeln('  <rezumat>');
+    buffer.writeln('    <totalObligatiiAnuale>');
+    buffer.writeln('      <impozitVenit>${_formatAmount(declaration.totalIncomeTax)}</impozitVenit>');
+    buffer.writeln('      <contributiiCAS>${_formatAmount(declaration.casContribution)}</contributiiCAS>');
+    buffer.writeln('      <contributiiCASS>${_formatAmount(declaration.cassContribution)}</contributiiCASS>');
+    buffer.writeln('      <total>${_formatAmount(declaration.totalAnnualTaxObligation)}</total>');
+    buffer.writeln('    </totalObligatiiAnuale>');
+    buffer.writeln('    <platiAvans>');
+    buffer.writeln('      <suma>${_formatAmount(declaration.advancePaymentsMade)}</suma>');
+    buffer.writeln('    </platiAvans>');
+    if (declaration.balanceDue > 0) {
+      buffer.writeln('    <diferentaPlata>');
+      buffer.writeln('      <suma>${_formatAmount(declaration.balanceDue)}</suma>');
+      buffer.writeln('    </diferentaPlata>');
+    }
+    if (declaration.balanceToRefund > 0) {
+      buffer.writeln('    <diferentaRambursat>');
+      buffer.writeln('      <suma>${_formatAmount(declaration.balanceToRefund)}</suma>');
+      buffer.writeln('    </diferentaRambursat>');
+    }
+    buffer.writeln('  </rezumat>');
+
+    // Declaration signature
+    buffer.writeln('  <semnatura>');
+    buffer.writeln('    <numeComplet>${_xmlEscape(declaration.firstName)} ${_xmlEscape(declaration.lastName)}</numeComplet>');
+    buffer.writeln('    <dataDeclaratie>${declaration.declarationDate.toIso8601String().split('T')[0]}</dataDeclaratie>');
+    buffer.writeln('  </semnatura>');
+
+    buffer.writeln('</declaratie>');
 
     return buffer.toString();
+  }
+
+  /// Format amount for XML (2 decimal places, no thousands separator)
+  static String _formatAmount(double amount) {
+    return amount.toStringAsFixed(2);
+  }
+
+  /// Escape special XML characters
+  static String _xmlEscape(String text) {
+    return text
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&apos;');
   }
 }
