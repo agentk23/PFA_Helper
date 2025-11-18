@@ -376,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     Text(
                       SafeFormatters.formatCurrency(
-                        taxReport.totalTaxesAndContributions,
+                        taxReport.totalTaxes,
                       ),
                       style: textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
