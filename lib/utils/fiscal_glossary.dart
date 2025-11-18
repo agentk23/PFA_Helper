@@ -1,14 +1,24 @@
 /// Fiscal Terms Glossary
 ///
 /// Provides plain language explanations for all Romanian fiscal terms
-/// used in PFA taxation and accounting
+/// used in PFA taxation and accounting. Each term includes technical
+/// definitions, simple explanations, and practical examples.
+///
+/// Terms are stored in uppercase keys for case-insensitive lookups.
 class FiscalGlossary {
   /// Get explanation for a fiscal term
+  ///
+  /// Returns the full explanation text for the specified [term],
+  /// or null if the term is not found in the glossary.
+  /// The lookup is case-insensitive.
   static String? getExplanation(String term) {
     return _glossary[term.toUpperCase()];
   }
 
   /// Get all terms in alphabetical order
+  ///
+  /// Returns a sorted list of all fiscal term keys available
+  /// in the glossary.
   static List<String> getAllTerms() {
     final terms = _glossary.keys.toList();
     terms.sort();
@@ -16,6 +26,12 @@ class FiscalGlossary {
   }
 
   /// Search for terms containing the query
+  ///
+  /// Performs a full-text search across both term names and their
+  /// explanations. Returns a map of matching terms and their explanations.
+  /// Returns all terms if [query] is empty.
+  ///
+  /// The search is case-insensitive.
   static Map<String, String> searchTerms(String query) {
     if (query.isEmpty) return _glossary;
 
@@ -514,7 +530,12 @@ Să fie trimisă și în SPV (e-Factura).''',
 }
 
 /// Help topics organized by category
+///
+/// Provides categorization of fiscal terms for easier navigation
+/// in the help system. Each category contains a list of term keys
+/// that can be looked up in the FiscalGlossary.
 class HelpTopics {
+  /// Map of categories to their respective fiscal term keys
   static const Map<String, List<String>> topicsByCategory = {
     'Baze': [
       'PFA',
@@ -553,17 +574,28 @@ class HelpTopics {
     ],
   };
 
+  /// Get all available category names
+  ///
+  /// Returns a list of all category names in the help system
   static List<String> getCategories() {
     return topicsByCategory.keys.toList();
   }
 
+  /// Get all term keys for a specific category
+  ///
+  /// Returns a list of term keys that belong to the specified [category].
+  /// Returns an empty list if the category doesn't exist.
   static List<String> getTermsForCategory(String category) {
     return topicsByCategory[category] ?? [];
   }
 }
 
 /// Quick tips for common scenarios
+///
+/// Provides quick answers to frequently asked questions about PFA
+/// taxation, registration, and compliance in Romania.
 class QuickTips {
+  /// Map of common questions to their detailed answers
   static const Map<String, String> tips = {
     'Cum calculez impozitul?': '''1. Venit brut - Cheltuieli = Profit brut
 2. Profit brut - CAS - CASS = Venit impozabil
@@ -676,10 +708,17 @@ După:
 - Declari anual (D212)''',
   };
 
+  /// Get all available questions
+  ///
+  /// Returns a list of all questions available in the quick tips system
   static List<String> getAllQuestions() {
     return tips.keys.toList();
   }
 
+  /// Get the answer for a specific question
+  ///
+  /// Returns the detailed answer for the specified [question],
+  /// or null if the question doesn't exist in the tips.
   static String? getAnswer(String question) {
     return tips[question];
   }

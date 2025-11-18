@@ -82,8 +82,14 @@ class FiscalTermTooltip extends StatelessWidget {
 }
 
 /// Dialog that displays the full explanation of a fiscal term
+///
+/// Shows a full-screen dialog with the term name and its complete
+/// explanation, with options to close or view more terms.
 class FiscalTermDialog extends StatelessWidget {
+  /// The fiscal term being explained
   final String term;
+
+  /// The full explanation text for the term
   final String explanation;
 
   const FiscalTermDialog({
@@ -138,6 +144,9 @@ class FiscalTermDialog extends StatelessWidget {
 }
 
 /// A compact inline help widget that shows explanation in a tooltip
+///
+/// Displays the label text with a small info icon next to it.
+/// Hovering shows a short tooltip, and tapping opens the full explanation dialog.
 class FiscalTermInlineHelp extends StatelessWidget {
   /// The fiscal term to explain
   final String term;
@@ -202,6 +211,10 @@ class FiscalTermInlineHelp extends StatelessWidget {
 }
 
 /// A widget that wraps a label and value with an optional help tooltip
+///
+/// Displays a label-value pair in a row layout with an optional help icon
+/// next to the label. Commonly used for displaying fiscal data with
+/// contextual help.
 class FiscalFieldWithHelp extends StatelessWidget {
   /// The fiscal term for help
   final String term;
@@ -266,9 +279,17 @@ class FiscalFieldWithHelp extends StatelessWidget {
 }
 
 /// A card that displays a quick tip from the glossary
+///
+/// Shows an expandable card with a question and detailed answer,
+/// useful for FAQ sections and quick reference guides.
 class QuickTipCard extends StatelessWidget {
+  /// The question or topic of the tip
   final String question;
+
+  /// The detailed answer or explanation
   final String answer;
+
+  /// Icon to display (defaults to tips_and_updates)
   final IconData icon;
 
   const QuickTipCard({

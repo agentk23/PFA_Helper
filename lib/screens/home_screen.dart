@@ -49,7 +49,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     if (_pfa == null) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 

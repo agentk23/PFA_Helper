@@ -174,7 +174,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 );
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                const PopupMenuItem<TransactionCategory?>(
                   value: null,
                   child: Row(
                     children: [
@@ -186,7 +186,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ),
                 const PopupMenuDivider(),
                 ...TransactionCategory.values.map((category) {
-                  return PopupMenuItem(
+                  return PopupMenuItem<TransactionCategory>(
                     value: category,
                     child: Row(
                       children: [
@@ -610,7 +610,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         border: OutlineInputBorder(),
                         helperText: 'Suma în lei fără TVA',
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                       ],
@@ -669,7 +671,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         border: OutlineInputBorder(),
                       ),
                       items: TransactionCategory.values.map((category) {
-                        return DropdownMenuItem(
+                        return DropdownMenuItem<TransactionCategory>(
                           value: category,
                           child: Row(
                             children: [
@@ -679,7 +681,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 color: category.isIncome ? Colors.green : Colors.red,
                               ),
                               const SizedBox(width: 8),
-                              Expanded(child: Text(category.displayName)),
+                              Expanded(
+                                child: Text(category.displayName),
+                              ),
                             ],
                           ),
                         );
@@ -742,7 +746,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       title: const Text('Data'),
                       subtitle: Text(
                         DateFormat('dd.MM.yyyy').format(selectedDate),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       leading: const Icon(Icons.calendar_today),
                       shape: RoundedRectangleBorder(

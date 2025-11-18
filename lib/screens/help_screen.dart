@@ -142,10 +142,9 @@ class _HelpScreenState extends State<HelpScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.search_off,
                             size: 64,
-                            color: Theme.of(context).colorScheme.secondary,
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -171,10 +170,9 @@ class _HelpScreenState extends State<HelpScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.search,
                         size: 64,
-                        color: Theme.of(context).colorScheme.secondary,
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -243,7 +241,9 @@ class _HelpScreenState extends State<HelpScreen>
                 return ListTile(
                   title: Text(
                     term,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   subtitle: preview.isNotEmpty
                       ? Text(

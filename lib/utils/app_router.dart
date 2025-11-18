@@ -159,25 +159,24 @@ class _SplashScreenState extends State<_SplashScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
+                const Text(
                   'Contabilitate simplificată pentru PFA',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white,
                     fontWeight: FontWeight.w400,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 60),
-                SizedBox(
+                const SizedBox(
                   width: 40,
                   height: 40,
                   child: CircularProgressIndicator(
-                    valueColor: const AlwaysStoppedAnimation<Color>(
+                    valueColor: AlwaysStoppedAnimation<Color>(
                       Colors.white,
                     ),
                     strokeWidth: 3,
-                    color: Colors.white.withOpacity(0.9),
                   ),
                 ),
               ],
