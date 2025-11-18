@@ -80,6 +80,10 @@ class PFA extends HiveObject {
     return caenCodes?.any((code) => code.hasSpecialTaxRate) ?? false;
   }
 
+  /// Creates a copy of this PFA with the given fields replaced with new values
+  ///
+  /// Returns a new [PFA] instance with the specified fields updated.
+  /// Any field that is not provided will retain its current value.
   PFA copyWith({
     String? cui,
     String? name,

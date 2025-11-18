@@ -38,6 +38,10 @@ class CAENCode extends HiveObject {
     return 0.10; // Standard 10% income tax
   }
 
+  /// Creates a copy of this CAENCode with the given fields replaced with new values
+  ///
+  /// Returns a new [CAENCode] instance with the specified fields updated.
+  /// Any field that is not provided will retain its current value.
   CAENCode copyWith({
     String? code,
     String? description,

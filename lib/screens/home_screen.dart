@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/pfa.dart';
 import '../models/transaction.dart';
 import '../services/storage_service.dart';
 import '../utils/tax_calculator.dart';
 import '../utils/safe_formatters.dart';
 import '../utils/error_handler.dart';
-import 'transactions_screen.dart';
-import 'reports_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -289,12 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TransactionsScreen(),
-                        ),
-                      );
+                      await context.push('/transactions');
                       _loadData();
                     },
                     icon: const Icon(Icons.add),
@@ -310,12 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ReportsScreen(),
-                        ),
-                      );
+                      context.push('/reports');
                     },
                     icon: const Icon(Icons.assessment),
                     label: const Text('Rapoarte'),

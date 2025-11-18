@@ -50,6 +50,10 @@ class Transaction extends HiveObject {
     this.customTaxRate,
   });
 
+  /// Creates a copy of this Transaction with the given fields replaced with new values
+  ///
+  /// Returns a new [Transaction] instance with the specified fields updated.
+  /// Any field that is not provided will retain its current value.
   Transaction copyWith({
     String? id,
     double? amount,
@@ -76,7 +80,10 @@ class Transaction extends HiveObject {
     );
   }
 
+  /// Returns true if this transaction is income (taxable or non-taxable)
   bool get isIncome => category.isIncome;
+
+  /// Returns true if this transaction is an expense (deductible or non-deductible)
   bool get isExpense => category.isExpense;
 
   /// Get the effective tax rate for this transaction

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../models/pfa.dart';
 import '../services/storage_service.dart';
-import 'home_screen.dart';
 
 class PFARegistrationScreen extends StatefulWidget {
   const PFARegistrationScreen({super.key});
@@ -75,11 +75,7 @@ class _PFARegistrationScreenState extends State<PFARegistrationScreen> {
           ),
         );
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
-        );
+        context.go('/');
       }
     }
   }

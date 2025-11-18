@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -6,10 +7,12 @@ class ErrorHandler {
   /// Log error for debugging
   static void logError(String context, dynamic error, [StackTrace? stackTrace]) {
     if (kDebugMode) {
-      print('❌ Error in $context: $error');
-      if (stackTrace != null) {
-        print('Stack trace: $stackTrace');
-      }
+      developer.log(
+        '❌ Error in $context: $error',
+        name: 'PFAHelper',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
