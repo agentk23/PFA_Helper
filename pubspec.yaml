@@ -54,6 +54,12 @@ dependencies:
   # Sharing files
   share_plus: ^10.0.3
 
+  # HTTP client for API calls
+  http: ^1.2.0
+
+  # Secure storage for API credentials
+  shared_preferences: ^2.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
