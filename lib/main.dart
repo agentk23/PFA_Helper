@@ -57,16 +57,6 @@ class PFAHelperApp extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 2,
         ),
-        cardTheme: CardTheme(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: Colors.grey.shade200,
-              width: 1,
-            ),
-          ),
-        ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             elevation: 0,
