@@ -100,8 +100,8 @@ class TaxReport {
   /// CAS (Social Security Contribution) - 25% on calculation base
   /// Thresholds: 12 or 24 minimum gross salaries
   double get casContribution {
-    final threshold12 = 12 * minimumGrossSalary2025; // 48,600 RON
-    final threshold24 = 24 * minimumGrossSalary2025; // 97,200 RON
+    const threshold12 = 12 * minimumGrossSalary2025; // 48,600 RON
+    const threshold24 = 24 * minimumGrossSalary2025; // 97,200 RON
 
     if (netTaxableIncome >= threshold24) {
       return 24300.0; // Fixed for income >= 24 minimum salaries
@@ -115,8 +115,8 @@ class TaxReport {
   /// CASS (Health Insurance Contribution) - 10% of net taxable income
   /// With minimum and maximum thresholds
   double get cassContribution {
-    final minThreshold = 6 * minimumGrossSalary2025; // 24,300 RON
-    final maxThreshold = 60 * minimumGrossSalary2025; // 243,000 RON
+    const minThreshold = 6 * minimumGrossSalary2025; // 24,300 RON
+    const maxThreshold = 60 * minimumGrossSalary2025; // 243,000 RON
 
     if (netTaxableIncome < minThreshold) {
       return 2430.0; // Minimum CASS
